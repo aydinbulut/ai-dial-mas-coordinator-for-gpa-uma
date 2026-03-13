@@ -51,7 +51,7 @@ services:
       'JAVA_OPTS': '-Dgflog.config=/opt/settings/gflog.xml'
       'LOG_DIR': '/app/log'
       'STORAGE_DIR': '/app/data'
-      'aidial.config.files': '["/opt/config/config.json"]'
+      'aidial.config.files': '["/opt/config/config.json", "/opt/config/keys.json"]'
       'aidial.storage.overrides': '{ "jclouds.filesystem.basedir": "data" }'
       'aidial.redis.singleServerConfig.address': 'redis://redis:6379'
       'LOG_LEVEL': "DEBUG"

@@ -1,3 +1,4 @@
 .env
 core-data/
 core-logs/
+core/keys.json
