@@ -2,3 +2,4 @@
 core-data/
 core-logs/
 core/keys.json
+__pycache__/
