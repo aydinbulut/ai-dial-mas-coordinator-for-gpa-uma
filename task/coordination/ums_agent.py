@@ -101,7 +101,7 @@ class UMSAgentGateway:
                     },
                     "stream": True
                 },
-                timeout=None  # Disable timeout for streaming requests
+                timeout=30  # Disable timeout for streaming requests
             )
             response.raise_for_status()
         # 3. Now is the time to recall the first practice with console chat when we parsed raw streaming responses,

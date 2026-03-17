@@ -31,26 +31,28 @@ class MASCoordinator:
             api_key=request.api_key, 
             api_version='2025-01-01-preview')
         # 2. Open stage for Coordination Request (StageProcessor will help with that)
-        stage_processor = StageProcessor()
-        stage = stage_processor.open_stage(choice=choice, name="coordination_request")
+        coordination_stage = StageProcessor.open_stage(choice, "Coordination Request")
         # 3. Prepare coordination request
         coordination_request = await self.__prepare_coordination_request(client=async_dial_client, request=request)
         # 4. Add to the stage generated coordination request and close the stage
-        stage.append_content(json.dumps(coordination_request.model_dump(), indent=4))
+        coordination_stage.append_content(f"```json\n\r{coordination_request.model_dump_json(indent=2)}\n\r```\n\r")
+        StageProcessor.close_stage_safely(coordination_stage)
+
         # 5. Handle coordination request (don't forget that all the content that will write called agent need to provide to stage)
-        coordination_request_response = await self.__handle_coordination_request(
+        processing_stage = StageProcessor.open_stage(choice, f"Call {coordination_request.agent_name} Agent")
+        coordination_response = await self.__handle_coordination_request(
             coordination_request=coordination_request,
             choice=choice,
-            stage=stage,
+            stage=processing_stage,
             request=request
         )
-        stage_processor.close_stage_safely(stage=stage)
+        StageProcessor.close_stage_safely(processing_stage)
         # 6. Generate final response based on the message from called agent
         return await self.__final_response(
             client=async_dial_client,
             choice=choice,
             request=request,
-            agent_message=coordination_request_response
+            agent_message=coordination_response
         )
 
     async def __prepare_coordination_request(self, client: AsyncDial, request: Request) -> CoordinationRequest:
@@ -84,9 +86,8 @@ class MASCoordinator:
         # 1. Create array with messages, first message is system prompt and it is dict
         messages = [{"role": Role.SYSTEM, "content": system_prompt}]
         # 2. Iterate through messages from request and:
-        #       - if user message that it has custom content and then add dict with user message and content (custom_content should be skipped)
-        #       - otherwise append it as dict with excluded none fields (use `dict` method, despite it is deprecated since
-        #         DIAL is using pydentic.v1)
+        #       - if the given message is a user message and has the custom content then add dict with user message and content (custom_content should be skipped)
+        #       - otherwise append the message as dict with excluded none fields (use `dict` method, despite it is deprecated since DIAL is using pydentic.v1)
         for message in request.messages:
             if message.role == Role.USER and message.custom_content is not None:
                 messages.append({
